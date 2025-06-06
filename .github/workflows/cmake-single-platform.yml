@@ -122,11 +122,11 @@ jobs:
       - name: zip Artifacts
         run: |
           ls ./artifacts
-          cd ./artifacts/Debug
+          cd ./artifacts/gtest_dbg_x64
           zip -r ../gtest_dbg_x64.zip ./*
           
           
-          cd ../Release
+          cd ../gtest_rel_x64
           zip -r ../gtest_rel_x64.zip ./*
           
           ls
