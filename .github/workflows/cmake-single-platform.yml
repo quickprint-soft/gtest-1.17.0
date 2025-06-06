@@ -13,33 +13,136 @@ env:
   BUILD_TYPE: Release
 
 jobs:
-  build:
+  build-windows:
+      runs-on: ${{ matrix.os }}
+      strategy:
+        fail-fast: false
+        matrix:
+          build_type: ["Debug","Release"]
+          os: [ "windows-2019"]
+          
     # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
     # You can convert this to a matrix build if you need cross-platform coverage.
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-    runs-on: windows-2019
+    # runs-on: windows-2019
 
-    steps:
-    - uses: actions/checkout@v4
+      steps:
+      - uses: actions/checkout@v4
+  
+     
+      - name: Add MSBuild to PATH
+        uses: microsoft/setup-msbuild@v2
+        with:
+            vs-prerelease: true
+            
+      - name: Configure CMake
+        # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
+        # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
+        
+        run: |
+          mkdir build
+          cd build
+          cmake ../ -DBUILD_GMOCK=OFF -G "Visual Studio 16 2019" -A x64
+  
+      - name: build
+        run: |
+          cd build
+          msbuild googletest-distribution.sln /p:Configuration=${{ matrix.build_type }} /p:Platform=x64
+          msbuild googletest-distribution.sln /p:Configuration=${{ matrix.build_type }} /p:Platform=x64
 
-   
-    - name: Add MSBuild to PATH
-      uses: microsoft/setup-msbuild@v2
-      with:
-          vs-prerelease: true
+      - name: List installed files
+        run: |
+          echo "Listing files in build\lib"
+          ls build/lib
+        shell: bash
+
+
+
+
+      # - name: List installed files222
+      #   run: |
+      #     echo "licensecc"
+      #     ls  C:/12.obj
+      #   shell: bash  
+
           
-    - name: Configure CMake
-      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      
-      run: |
-        mkdir build
-        cd build
-        cmake ../ -DBUILD_GMOCK=OFF -G "Visual Studio 16 2019" -A x64
+      - name: Upload Debug artifact (x64)
+        if: matrix.build_type == 'Debug'
+        uses: actions/upload-artifact@v4
+        with:
+          name: QuickPrint_dbg_x64
+          path: C:/licensecc
+          retention-days: 1
 
-    - name: build
-      run: |
-        cd build
-        msbuild googletest-distribution.sln /p:Configuration=Debug /p:Platform=x64
-        msbuild googletest-distribution.sln /p:Configuration=Release /p:Platform=x64
+      - name: Upload Release artifact (x64)
+        if: matrix.build_type == 'Release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: QuickPrint_rel_x64
+          path: C:/licensecc
+          retention-days: 1
+          
+  create-release:
+    runs-on: ubuntu-latest
+    needs: build-windows
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # - name: Set up environment
+      #   run: echo "RELEASE_DATE=licensecc-$(date +'%Y%m%d')" >> $GITHUB_ENV
+
+      - name: Install GitHub CLI
+        uses: sersoft-gmbh/setup-gh-cli-action@v2
+
+      - name: Delete existing release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release delete $RELEASE_DATE --yes || true
+
+      - name: Create new release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release create $RELEASE_DATE -t "Release $RELEASE_DATE" -n "Automated release for $RELEASE_DATE"
+
+
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - name: zip Artifacts
+        run: |
+          ls ./artifacts
+          cd ./artifacts/QuickPrint_dbg_x64
+          zip -r ../QuickPrint_dbg_x64.zip ./*
+          
+          
+          cd ../QuickPrint_rel_x64
+          zip -r ../QuickPrint_rel_x64.zip ./*
+          
+          ls
+          
+          
+      - name: Generate MD5 Checksums
+        run: |
+          > ./artifacts/filelist.txt  # 清空或创建 filelist.txt 文件
+          for file in ./artifacts/*.zip; do
+            # Calculate MD5 checksum
+            md5sum=$(md5sum "$file" | awk '{ print $1 }')
+            # Write to filelist.txt
+            echo "$(basename "$file") | ${md5sum}" >> ./artifacts/filelist.txt
+          done
+      - name: Upload Artifacts to Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd ./artifacts
+          gh release upload $RELEASE_DATE ./*.zip
+          gh release upload $RELEASE_DATE filelist.txt
+          
+      - name: LS Artifacts
+        run: |
+          ls 
+          ls ./artifacts
 
