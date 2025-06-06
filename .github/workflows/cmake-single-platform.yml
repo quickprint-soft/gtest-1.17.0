@@ -73,7 +73,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: gtest_dbg_x64
-          path: build/lib/${{ matrix.build_type }}
+          path: build/lib
           retention-days: 1
 
       - name: Upload Release artifact (x64)
@@ -81,7 +81,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: gtest_rel_x64
-          path: build/lib/${{ matrix.build_type }}
+          path: build/lib
           retention-days: 1
           
   create-release:
