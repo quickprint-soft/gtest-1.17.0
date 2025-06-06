@@ -70,16 +70,16 @@ jobs:
         if: matrix.build_type == 'Debug'
         uses: actions/upload-artifact@v4
         with:
-          name: QuickPrint_dbg_x64
-          path: C:/licensecc
+          name: gtest_dbg_x64
+          path: build/lib/${{ matrix.build_type }}
           retention-days: 1
 
       - name: Upload Release artifact (x64)
         if: matrix.build_type == 'Release'
         uses: actions/upload-artifact@v4
         with:
-          name: QuickPrint_rel_x64
-          path: C:/licensecc
+          name: gtest_rel_x64
+          path: build/lib/${{ matrix.build_type }}
           retention-days: 1
           
   create-release:
@@ -114,12 +114,12 @@ jobs:
       - name: zip Artifacts
         run: |
           ls ./artifacts
-          cd ./artifacts/QuickPrint_dbg_x64
-          zip -r ../QuickPrint_dbg_x64.zip ./*
+          cd ./artifacts/Debug
+          zip -r ../gtest_dbg_x64.zip ./*
           
           
-          cd ../QuickPrint_rel_x64
-          zip -r ../QuickPrint_rel_x64.zip ./*
+          cd ../Release
+          zip -r ../gtest_rel_x64.zip ./*
           
           ls
           
