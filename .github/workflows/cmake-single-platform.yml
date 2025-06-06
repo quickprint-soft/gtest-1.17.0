@@ -84,13 +84,13 @@ jobs:
           
   create-release:
     runs-on: ubuntu-latest
-    needs: build-windows
+    needs: msw-msvs
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # - name: Set up environment
-      #   run: echo "RELEASE_DATE=licensecc-$(date +'%Y%m%d')" >> $GITHUB_ENV
+      - name: Set up environment
+        run: echo "RELEASE_DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
 
       - name: Install GitHub CLI
         uses: sersoft-gmbh/setup-gh-cli-action@v2
@@ -104,6 +104,13 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh release create $RELEASE_DATE -t "Release $RELEASE_DATE" -n "Automated release for $RELEASE_DATE"
+
+
+      - name: Download Artifacts
+        
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
 
 
       - name: Download Artifacts
