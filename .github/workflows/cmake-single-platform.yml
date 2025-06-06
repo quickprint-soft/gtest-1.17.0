@@ -49,12 +49,13 @@ jobs:
         run: |
           cd build
           msbuild googletest-distribution.sln /p:Configuration=${{ matrix.build_type }} /p:Platform=x64
-          msbuild googletest-distribution.sln /p:Configuration=${{ matrix.build_type }} /p:Platform=x64
+          # msbuild googletest-distribution.sln /p:Configuration=${{ matrix.build_type }} /p:Platform=x64
 
       - name: List installed files
         run: |
           echo "Listing files in build\lib"
           ls build/lib
+          cp -r googletest/include ./build/lib
         shell: bash
 
 
