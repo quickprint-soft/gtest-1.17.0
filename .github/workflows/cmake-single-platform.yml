@@ -31,10 +31,10 @@ jobs:
       - uses: actions/checkout@v4
   
      
-      # - name: Add MSBuild to PATH
-      #   uses: microsoft/setup-msbuild@v2
-      #   with:
-      #       vs-prerelease: true
+      - name: Add MSBuild to PATH
+        uses: microsoft/setup-msbuild@v2
+        with:
+            vs-prerelease: true
 
       # - name: Install Visual Studio 2019
       #   uses: microsoft/visualstudio-installer-action@v1
